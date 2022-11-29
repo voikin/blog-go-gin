@@ -21,7 +21,23 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	auth := router.Group("/auth")
 	{
 		auth.POST("/sign-up", h.signUp)
-		auth.POST("/sign-in")
+		auth.POST("/sign-in", h.signIn)
+	}
+
+	admin := router.Group("/admin", h.adminMiddleware)
+	{
+		users := admin.Group("/users")
+		{
+			users.GET("/", h.getUsers)
+			users.GET("/:id", h.getUserByID)
+			users.DELETE("/:id", h.deleteUserByID)
+		}
+	}
+
+	show := router.Group("/articles", h.authMiddleware)
+	{
+		show.GET("/")
+		show.GET("/:id")
 	}
 
 	api := router.Group("/api")
@@ -29,7 +45,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		articles := api.Group("/articles")
 		{
 			articles.POST("/new")
-			articles.GET("/:id")
 			articles.DELETE("/:id")
 		}
 	}

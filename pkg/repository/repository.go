@@ -18,7 +18,9 @@ type Repository struct {
 type UserRepository interface {
 	SaveUser(user *models.User) (int64, error)
 	DeleteUser(id int64) error
-	GetUser(id int64) (*models.User, error)
+	GetUserByID(id int64) (*models.User, error)
+	GetUserByNickname(nickname string) (*models.User, error)
+	GetUsers() ([]*models.User, error)
 }
 
 type ArticleInfoRepository interface {
@@ -34,9 +36,10 @@ type ArticleTextRepository interface {
 }
 
 type SessionRepository interface {
-	SaveSession(session *models.Session) error
+	SaveSession(session *models.Session) (int64, error)
 	DeleteSession(id int64) error
-	GetSession(id int64) (*models.Session, error)
+	GetSessionByToken(sessionToken string) (*models.Session, error)
+	GetSessionByID(id int64) (*models.Session, error)
 }
 
 func NewRepository(db *sql.DB, client *elasticsearch.Client) *Repository {
