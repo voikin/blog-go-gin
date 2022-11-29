@@ -16,7 +16,7 @@ type Repository struct {
 }
 
 type UserRepository interface {
-	SaveUser(user *models.User) error
+	SaveUser(user *models.User) (int64, error)
 	DeleteUser(id int64) error
 	GetUser(id int64) (*models.User, error)
 }
