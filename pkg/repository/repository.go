@@ -24,7 +24,7 @@ type UserRepository interface {
 }
 
 type ArticleInfoRepository interface {
-	SaveArticleInfo(article *models.ArticleInfo) error
+	SaveArticleInfo(article *models.ArticleInfo) (int64, error)
 	DeleteArticleInfo(id int64) error
 	GetArticleInfo(id int64) (*models.ArticleInfo, error)
 }

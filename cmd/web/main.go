@@ -15,15 +15,20 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	repos := repository.NewRepository(db, es)
 	handlers := handler.NewHandler(repos)
 
 	srv := new(blog_go_gin.Server)
 
 	err = srv.Run("8080", handlers.InitRoutes())
+	if err != nil {
+		log.Fatal(err)
+	}
 
 }

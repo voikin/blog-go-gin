@@ -34,7 +34,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 	}
 
-	show := router.Group("/articles", h.authMiddleware)
+	show := router.Group("/show", h.authMiddleware)
 	{
 		show.GET("/")
 		show.GET("/:id")
@@ -42,9 +42,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	api := router.Group("/api")
 	{
-		articles := api.Group("/articles")
+		articles := api.Group("/articles", h.authMiddleware)
 		{
-			articles.POST("/new")
+			articles.POST("/new", h.saveArticle)
+			articles.GET("/")
+			articles.GET("/:id")
 			articles.DELETE("/:id")
 		}
 	}
