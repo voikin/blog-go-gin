@@ -15,7 +15,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
 		log.Fatal(err)

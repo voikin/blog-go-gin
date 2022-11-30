@@ -46,7 +46,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			articles.POST("/new", h.saveArticle)
 			articles.GET("/")
-			articles.GET("/:id")
+			articles.GET("/:id", h.getArticleByID)
 			articles.DELETE("/:id")
 		}
 	}

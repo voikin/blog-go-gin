@@ -1,3 +1,4 @@
+-- Active: 1669810002212@@127.0.0.1@3306@blog_go_gin
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -15,3 +16,5 @@
 # vendor/
 
 .idea
+
+*.sum

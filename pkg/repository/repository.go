@@ -32,7 +32,8 @@ type ArticleInfoRepository interface {
 type ArticleTextRepository interface {
 	SaveArticleText(article *models.ArticleText) error
 	DeleteArticleText(id int64) error
-	GetArticleText(id int64) (*models.ArticleText, error)
+	GetArticlesText() ([]*models.ArticleText, error)
+	GetArticleTextByID(id int64) (*models.ArticleText, error)
 }
 
 type SessionRepository interface {

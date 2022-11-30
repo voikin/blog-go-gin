@@ -37,5 +37,16 @@ func (m *ArticlesInfoMySQL) DeleteArticleInfo(id int64) error {
 	return nil
 }
 func (m *ArticlesInfoMySQL) GetArticleInfo(id int64) (*models.ArticleInfo, error) {
-	return nil, nil
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", articlesInfoTable)
+
+	row := m.db.QueryRow(query, id)
+
+	articleInfo := &models.ArticleInfo{}
+
+	err := row.Scan(&articleInfo.ID, &articleInfo.UserID, &articleInfo.Title, &articleInfo.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return articleInfo, nil
 }
