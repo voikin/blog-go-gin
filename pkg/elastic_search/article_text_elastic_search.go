@@ -71,7 +71,7 @@ func (es *ArticlesTextElasticSearch) GetArticleTextByID(id int64) (*models.Artic
 	res, err := req.Do(context.Background(), es.client)
 	fmt.Println(res.String())
 	defer func() {
-		if res != nil && res != nil {
+		if res != nil && res.Body != nil {
 			if err := res.Body.Close(); err != nil {
 				fmt.Println(err.Error())
 			}
@@ -114,7 +114,7 @@ func (es *ArticlesTextElasticSearch) GetArticlesText() ([]*models.ArticleText, e
 	}
 	resJSON, err := req.Do(context.Background(), es.client)
 	defer func() {
-		if resJSON != nil && resJSON != nil {
+		if resJSON != nil && resJSON.Body != nil {
 			if err := resJSON.Body.Close(); err != nil {
 				fmt.Println(err.Error())
 			}

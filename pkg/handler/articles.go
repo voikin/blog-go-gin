@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/dazai404/blog-go-gin/models"
@@ -52,7 +53,9 @@ func (h *Handler) saveArticle(ctx *gin.Context) {
 		return
 	}
 
-	ctx.AbortWithStatus(http.StatusOK)
+	ctx.JSON(http.StatusOK, gin.H{
+		"id": id,
+	})
 }
 
 func (h *Handler) getArticleByID(ctx *gin.Context) {
@@ -89,4 +92,54 @@ func (h *Handler) getArticleByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"article": article,
 	})
+}
+
+func (h *Handler) getAllArticles(ctx *gin.Context) {
+	articlesInfo, err := h.repository.GetArticlesInfo()
+	if err != nil {
+		ctx.AbortWithError(http.StatusConflict, err)
+		return
+	}
+
+	articles := make([]*models.Article, 0, 1)
+
+	wg := sync.WaitGroup{}
+	artMux := sync.Mutex{}
+	errMux := sync.Mutex{}
+	var errGor *error
+
+	for _, val := range articlesInfo {
+		wg.Add(1)
+		go func (context *gin.Context, info *models.ArticleInfo, errGo *error){
+			articleID := info.ID
+			articleText, err := h.repository.GetArticleTextByID(articleID)
+			if err != nil {
+				errMux.Lock()
+				errGo = &err
+				errMux.Unlock()
+			}
+			artMux.Lock()
+			articles = append(articles, &models.Article{
+				ID: info.ID,
+				UserID: info.UserID,
+				Title: info.Title,
+				Text: articleText.Text,
+				CreatedAt: info.CreatedAt,
+			})
+			artMux.Unlock()
+			wg.Done()
+		}(ctx, val, errGor)
+	}
+
+	if errGor != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	wg.Wait()
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"articles": articles,
+		"err": errGor,
+	})
+
 }

@@ -3,6 +3,8 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/dazai404/blog-go-gin/models"
 )
 
@@ -49,4 +51,42 @@ func (m *ArticlesInfoMySQL) GetArticleInfo(id int64) (*models.ArticleInfo, error
 	}
 
 	return articleInfo, nil
+}
+
+func (m *ArticlesInfoMySQL) GetArticlesInfo() ([]*models.ArticleInfo, error) {
+	query := fmt.Sprintf("SELECT * FROM %s", articlesInfoTable)
+
+	rows, err := m.db.Query(query)
+
+	defer func() {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				fmt.Println(err.Error())
+			}
+		}
+	}()
+
+	if err != nil {
+		return nil, err
+	}
+
+	articlesInfo := make([]*models.ArticleInfo, 0, 1)
+	var id, userID int64
+	var title string
+	var createdAt time.Time
+
+	for rows.Next() {
+		err = rows.Scan(&id, &userID, &title, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+		articlesInfo = append(articlesInfo, &models.ArticleInfo{
+			ID: id,
+			UserID: userID,
+			Title: title,
+			CreatedAt: createdAt,
+		})
+	}
+
+	return articlesInfo, nil
 }
