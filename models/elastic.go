@@ -1,6 +1,6 @@
 package models
 
-type ElasticSearchSearch struct {
+type ElasticSearchSearchResponse struct {
 	Took int `json:"took"`
 	TimedOut bool `json:"timed_out"`
 	Shards *struct {
@@ -17,28 +17,35 @@ type ElasticSearchSearch struct {
 		MaxScore float32 `json:"max_score"`
 		Hits []*struct {
 			Index string `json:"_index"`
-			ID int64 `json:"_id"`
+			ID string `json:"_id"`
 			Score float32 `json:"_score"`
 			Source *struct {
 				Text string `json:"text"`
-			}
+			} `json:"_source"`
 		} `json:"hits"`
 	}
 }
 
 // {
-//     "_index": "article_text",
-//     "_id": "24",
-//     "_version": 1,
-//     "_seq_no": 0,
-//     "_primary_term": 1,
-//     "found": true,
-//     "_source": {
-//         "text": "test2 text"
+//     "query": {
+//         "ids": {
+//             "values":[
+//                 "40",
+//                 "39"
+//             ]
+//         } 
 //     }
 // }
 
-type ElasticSearchGet struct {
+type ElasticSearchSearchPostRequest struct {
+	Query *struct{
+		IDs *struct{
+			Values []int64 `json:"values"`
+		} `json:"ids"`
+	} `json:"query"`
+}
+
+type ElasticSearchGetResponse struct {
 	Index string `json:"_index"`
 	ID string `json:"_id"`
 	Version int `json:"_version"`

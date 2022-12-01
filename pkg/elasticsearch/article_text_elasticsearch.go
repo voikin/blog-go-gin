@@ -36,7 +36,7 @@ func (es *ArticlesTextElasticSearch) SaveArticleText(articleText *models.Article
 		return err
 	}
 	req := esapi.IndexRequest{
-		Index:      "articles_text",
+		Index:      articlesTextIndex,
 		DocumentID: strconv.FormatInt(articleText.ID, 10),
 		Body:       bytes.NewReader(jsonText),
 	}
@@ -64,7 +64,7 @@ func (es *ArticlesTextElasticSearch) DeleteArticleText(id int64) error {
 
 func (es *ArticlesTextElasticSearch) GetArticleTextByID(id int64) (*models.ArticleText, error) {
 	req := esapi.GetRequest{
-		Index: "articles_text",
+		Index: articlesTextIndex,
 		DocumentID: strconv.FormatInt(id, 10),
 		Pretty: true,
 	}
@@ -84,7 +84,7 @@ func (es *ArticlesTextElasticSearch) GetArticleTextByID(id int64) (*models.Artic
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.String())
 	}
-	response := &models.ElasticSearchGet{}
+	response := &models.ElasticSearchGetResponse{}
 	split := strings.SplitAfterN(res.String(), "] ", 2)
 	body := split[1]
 	fmt.Println(body)
@@ -101,16 +101,10 @@ func (es *ArticlesTextElasticSearch) GetArticleTextByID(id int64) (*models.Artic
 }
 
 func (es *ArticlesTextElasticSearch) GetArticlesText() ([]*models.ArticleText, error) {
-	body := make(map[string]interface{})
-	jsonMessage, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
 	req := esapi.SearchRequest{
 		Index: []string{
-			"articles_text",
+			articlesTextIndex,
 		},
-		Body: bytes.NewReader(jsonMessage),
 	}
 	resJSON, err := req.Do(context.Background(), es.client)
 	defer func() {
@@ -126,18 +120,88 @@ func (es *ArticlesTextElasticSearch) GetArticlesText() ([]*models.ArticleText, e
 	if resJSON.IsError() {
 		return nil, errors.New(resJSON.String())
 	}
-	res := &models.ElasticSearchSearch{}
+	res := &models.ElasticSearchSearchResponse{}
 	err = json.Unmarshal([]byte(resJSON.String()), res)
 	if err != nil {
 		return nil, err
 	}
 	articlesText := make([]*models.ArticleText, 0, 1)
 	for _, hit := range res.Hits.Hits {
+		id, err := strconv.Atoi(hit.ID)
+		if err != nil {
+			return nil, err
+		}
 		articleTextTemp := &models.ArticleText{
-			ID: hit.ID,
+			ID: int64(id),
 			Text: hit.Source.Text,
 		}
 		articlesText = append(articlesText, articleTextTemp)
 	}
 	return articlesText, nil
 }
+
+func (es *ArticlesTextElasticSearch) GetArticlesTextByIDs(ids []int64) ([]*models.ArticleText, error) {
+	idss := &struct {
+		Values []int64 `json:"values"`
+	}{
+		ids,
+	}
+	query := &struct {
+		IDs *struct{
+			Values []int64 `json:"values"`
+		} `json:"ids"`
+	}{
+		idss,
+	}
+	requestBody := *&models.ElasticSearchSearchPostRequest{
+		Query: query,
+	}
+	bodyJson, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, err
+	}
+	req := esapi.SearchRequest{
+		Index: []string{
+			articlesTextIndex,
+		},
+		Body: bytes.NewReader(bodyJson),
+	}
+	res, err := req.Do(context.Background(), es.client)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if res != nil && res.Body != nil {
+			if err := res.Body.Close(); err != nil {
+				fmt.Println(err.Error())
+			}
+		}
+	}()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.New(res.String())
+	}
+
+	response := &models.ElasticSearchSearchResponse{}
+	err = json.NewDecoder(res.Body).Decode(response)
+	if err != nil {
+		return nil, err
+	}
+
+	articlesText := make([]*models.ArticleText, 0, 1)
+	fmt.Println(response.Hits.Hits[0])
+	for _, hit := range response.Hits.Hits {
+		id, err := strconv.Atoi(hit.ID)
+		if err != nil {
+			return nil, err
+		}
+		articleTextTemp := &models.ArticleText{
+			ID: int64(id),
+			Text: hit.Source.Text,
+		}
+		articlesText = append(articlesText, articleTextTemp)
+	}
+	return articlesText, nil
+}
+

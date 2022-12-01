@@ -3,7 +3,7 @@ package repository
 import (
 	"database/sql"
 	"github.com/dazai404/blog-go-gin/models"
-	"github.com/dazai404/blog-go-gin/pkg/elastic_search"
+	"github.com/dazai404/blog-go-gin/pkg/elasticsearch"
 	"github.com/dazai404/blog-go-gin/pkg/mysql"
 	"github.com/elastic/go-elasticsearch/v8"
 )
@@ -35,6 +35,7 @@ type ArticleTextRepository interface {
 	DeleteArticleText(id int64) error
 	GetArticlesText() ([]*models.ArticleText, error)
 	GetArticleTextByID(id int64) (*models.ArticleText, error)
+	GetArticlesTextByIDs(ids []int64) ([]*models.ArticleText, error)
 }
 
 type SessionRepository interface {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -105,19 +106,12 @@ func (h *Handler) getAllArticles(ctx *gin.Context) {
 
 	wg := sync.WaitGroup{}
 	artMux := sync.Mutex{}
-	errMux := sync.Mutex{}
-	var errGor *error
 
 	for _, val := range articlesInfo {
 		wg.Add(1)
-		go func (context *gin.Context, info *models.ArticleInfo, errGo *error){
+		go func (context *gin.Context, info *models.ArticleInfo){
 			articleID := info.ID
-			articleText, err := h.repository.GetArticleTextByID(articleID)
-			if err != nil {
-				errMux.Lock()
-				errGo = &err
-				errMux.Unlock()
-			}
+			articleText, _ := h.repository.GetArticleTextByID(articleID)
 			artMux.Lock()
 			articles = append(articles, &models.Article{
 				ID: info.ID,
@@ -128,18 +122,51 @@ func (h *Handler) getAllArticles(ctx *gin.Context) {
 			})
 			artMux.Unlock()
 			wg.Done()
-		}(ctx, val, errGor)
-	}
-
-	if errGor != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		}(ctx, val)
 	}
 
 	wg.Wait()
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"articles": articles,
-		"err": errGor,
 	})
 
+}
+
+func (h *Handler) getAllArticlesTest(ctx *gin.Context) {
+	articlesInfo, err := h.repository.GetArticlesInfo()
+	if err != nil {
+		ctx.AbortWithError(http.StatusConflict, err)
+		return
+	}
+
+	articles := make([]*models.Article, 0, 1)
+	ids := make([]int64, 0, 1)
+
+	for _, val := range articlesInfo {
+		ids = append(ids, val.ID)
+	}
+
+	articlesText, err := h.repository.GetArticlesTextByIDs(ids)
+	if err != nil {
+		ctx.AbortWithError(http.StatusConflict, err)
+		return
+	}
+
+	for i, val := range articlesInfo {
+		if articlesInfo[i].ID != articlesText[i].ID {
+			ctx.AbortWithError(http.StatusInternalServerError, errors.New("error with connecting entities from databases"))
+			return
+		}
+		articles = append(articles, &models.Article{
+			ID: val.ID,
+			UserID: val.ID,
+			Title: val.Title,
+			Text: articlesText[i].Text,
+			CreatedAt: val.CreatedAt,
+		})
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"articles": articles,
+	})
 }
