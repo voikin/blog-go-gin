@@ -10,7 +10,7 @@ import (
 func (h *Handler) getUsers(ctx *gin.Context) {
 	users, err := h.repository.GetUsers()
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -22,13 +22,13 @@ func (h *Handler) getUsers(ctx *gin.Context) {
 func (h *Handler) getUserByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	user, err := h.repository.GetUserByID(int64(id))
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -40,14 +40,14 @@ func (h *Handler) getUserByID(ctx *gin.Context) {
 func (h *Handler) deleteUserByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.repository.DeleteUser(int64(id))
 
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 	}
 
 	ctx.AbortWithStatus(http.StatusOK)

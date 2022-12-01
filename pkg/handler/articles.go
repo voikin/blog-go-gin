@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,13 +20,13 @@ func (h *Handler) saveArticle(ctx *gin.Context) {
 	}
 
 	input := &struct {
-		Title string `json:"title"`
-		Text  string `json:"text"`
+		Title string `json:"title" binding:"required"`
+		Text  string `json:"text" binding:"required"`
 	}{}
 
 	err := ctx.BindJSON(input)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -39,7 +38,7 @@ func (h *Handler) saveArticle(ctx *gin.Context) {
 
 	id, err := h.repository.SaveArticleInfo(articleInfo)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -50,7 +49,7 @@ func (h *Handler) saveArticle(ctx *gin.Context) {
 
 	err = h.repository.SaveArticleText(articleText)
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -62,17 +61,17 @@ func (h *Handler) saveArticle(ctx *gin.Context) {
 func (h *Handler) getArticleByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	articleInfo, err := h.repository.GetArticleInfo(int64(id))
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	articleText, err := h.repository.GetArticleTextByID(int64(id))
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -83,10 +82,10 @@ func (h *Handler) getArticleByID(ctx *gin.Context) {
 		Text      string    `json:"text"`
 		CreatedAt time.Time `json:"created_at"`
 	}{
-		ID: int64(id),
-		UserID: articleInfo.UserID,
-		Title: articleInfo.Title,
-		Text: articleText.Text,
+		ID:        int64(id),
+		UserID:    articleInfo.UserID,
+		Title:     articleInfo.Title,
+		Text:      articleText.Text,
 		CreatedAt: articleInfo.CreatedAt,
 	}
 
@@ -98,7 +97,7 @@ func (h *Handler) getArticleByID(ctx *gin.Context) {
 func (h *Handler) getAllArticles(ctx *gin.Context) {
 	articlesInfo, err := h.repository.GetArticlesInfo()
 	if err != nil {
-		ctx.AbortWithError(http.StatusConflict, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -109,15 +108,15 @@ func (h *Handler) getAllArticles(ctx *gin.Context) {
 
 	for _, val := range articlesInfo {
 		wg.Add(1)
-		go func (context *gin.Context, info *models.ArticleInfo){
+		go func(context *gin.Context, info *models.ArticleInfo) {
 			articleID := info.ID
 			articleText, _ := h.repository.GetArticleTextByID(articleID)
 			artMux.Lock()
 			articles = append(articles, &models.Article{
-				ID: info.ID,
-				UserID: info.UserID,
-				Title: info.Title,
-				Text: articleText.Text,
+				ID:        info.ID,
+				UserID:    info.UserID,
+				Title:     info.Title,
+				Text:      articleText.Text,
 				CreatedAt: info.CreatedAt,
 			})
 			artMux.Unlock()
@@ -136,7 +135,7 @@ func (h *Handler) getAllArticles(ctx *gin.Context) {
 func (h *Handler) getAllArticlesTest(ctx *gin.Context) {
 	articlesInfo, err := h.repository.GetArticlesInfo()
 	if err != nil {
-		ctx.AbortWithError(http.StatusConflict, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -149,20 +148,20 @@ func (h *Handler) getAllArticlesTest(ctx *gin.Context) {
 
 	articlesText, err := h.repository.GetArticlesTextByIDs(ids)
 	if err != nil {
-		ctx.AbortWithError(http.StatusConflict, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	for i, val := range articlesInfo {
 		if articlesInfo[i].ID != articlesText[i].ID {
-			ctx.AbortWithError(http.StatusInternalServerError, errors.New("error with connecting entities from databases"))
+			newErrorResponse(ctx, http.StatusInternalServerError, "error with connecting entities from databases")
 			return
 		}
 		articles = append(articles, &models.Article{
-			ID: val.ID,
-			UserID: val.ID,
-			Title: val.Title,
-			Text: articlesText[i].Text,
+			ID:        val.ID,
+			UserID:    val.ID,
+			Title:     val.Title,
+			Text:      articlesText[i].Text,
 			CreatedAt: val.CreatedAt,
 		})
 	}

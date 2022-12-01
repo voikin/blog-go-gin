@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/dazai404/blog-go-gin/models"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/sirupsen/logrus"
 )
 
 type ArticlesTextElasticSearch struct {
@@ -41,11 +41,10 @@ func (es *ArticlesTextElasticSearch) SaveArticleText(articleText *models.Article
 		Body:       bytes.NewReader(jsonText),
 	}
 	res, err := req.Do(context.Background(), es.client)
-	fmt.Println(res.String())
 	defer func() {
 		if res != nil && res.Body != nil {
 			if err := res.Body.Close(); err != nil {
-				fmt.Println(err.Error())
+				logrus.Println(err.Error())
 			}
 		}
 	}()
@@ -69,16 +68,15 @@ func (es *ArticlesTextElasticSearch) GetArticleTextByID(id int64) (*models.Artic
 		Pretty: true,
 	}
 	res, err := req.Do(context.Background(), es.client)
-	fmt.Println(res.String())
 	defer func() {
 		if res != nil && res.Body != nil {
 			if err := res.Body.Close(); err != nil {
-				fmt.Println(err.Error())
+				logrus.Println(err.Error())
 			}
 		}
 	}()
 	if err != nil {
-		log.Println(err.Error(), 1)
+		logrus.Println(err.Error(), 1)
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
@@ -87,10 +85,9 @@ func (es *ArticlesTextElasticSearch) GetArticleTextByID(id int64) (*models.Artic
 	response := &models.ElasticSearchGetResponse{}
 	split := strings.SplitAfterN(res.String(), "] ", 2)
 	body := split[1]
-	fmt.Println(body)
 	err = json.Unmarshal([]byte(body), response)
 	if err != nil {
-		log.Println(err.Error(), 2)
+		logrus.Println(err.Error(), 2)
 		return nil, err
 	}
 	articleText := &models.ArticleText{
@@ -110,7 +107,7 @@ func (es *ArticlesTextElasticSearch) GetArticlesText() ([]*models.ArticleText, e
 	defer func() {
 		if resJSON != nil && resJSON.Body != nil {
 			if err := resJSON.Body.Close(); err != nil {
-				fmt.Println(err.Error())
+				logrus.Println(err.Error())
 			}
 		}
 	}()
@@ -174,7 +171,7 @@ func (es *ArticlesTextElasticSearch) GetArticlesTextByIDs(ids []int64) ([]*model
 	defer func() {
 		if res != nil && res.Body != nil {
 			if err := res.Body.Close(); err != nil {
-				fmt.Println(err.Error())
+				logrus.Println(err.Error())
 			}
 		}
 	}()
@@ -190,7 +187,6 @@ func (es *ArticlesTextElasticSearch) GetArticlesTextByIDs(ids []int64) ([]*model
 	}
 
 	articlesText := make([]*models.ArticleText, 0, 1)
-	fmt.Println(response.Hits.Hits[0])
 	for _, hit := range response.Hits.Hits {
 		id, err := strconv.Atoi(hit.ID)
 		if err != nil {

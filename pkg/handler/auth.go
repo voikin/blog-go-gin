@@ -12,20 +12,20 @@ import (
 func (h *Handler) signUp(ctx *gin.Context) {
 	input := &struct {
 		Nickname string `json:"nickname"`
-		Email    string `json:"email"`
+		Email    string `json:"email" binding:"email"`
 		Role     string `json:"role"`
 		Password string `json:"password"`
 	}{}
 
 	err := ctx.BindJSON(input)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -38,7 +38,7 @@ func (h *Handler) signUp(ctx *gin.Context) {
 
 	id, err := h.repository.SaveUser(user)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -55,19 +55,19 @@ func (h *Handler) signIn(ctx *gin.Context) {
 
 	err := ctx.BindJSON(input)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	user, err := h.repository.GetUserByNickname(input.Nickname)
 	if err != nil {
-		ctx.AbortWithError(http.StatusUnauthorized, err)
+		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(input.Password))
 	if err != nil {
-		ctx.AbortWithError(http.StatusUnauthorized, err)
+		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -81,13 +81,13 @@ func (h *Handler) signIn(ctx *gin.Context) {
 
 	id, err := h.repository.SaveSession(newSession)
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	session, err := h.repository.GetSessionByID(id)
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -6,18 +6,20 @@ import (
 	"github.com/dazai404/blog-go-gin/pkg/mysql"
 	"github.com/dazai404/blog-go-gin/pkg/repository"
 	"github.com/elastic/go-elasticsearch/v8"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	logrus.SetFormatter(new(logrus.JSONFormatter))
+
 	db, err := mysql.NewMySQLConnection("root", "root", "3306", "blog_go_gin")
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 	defer db.Close()
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 	repos := repository.NewRepository(db, es)
@@ -27,7 +29,7 @@ func main() {
 
 	err = srv.Run("8080", handlers.InitRoutes())
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 }
