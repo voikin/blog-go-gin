@@ -34,7 +34,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 		adminArticles := admin.Group("/articles")
 		{
-			adminArticles.GET("/", h.getAllArticles)
+			adminArticles.GET("/", h.getAllArticlesTest)
 		}
 	}
 
@@ -49,7 +49,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		articles := api.Group("/articles", h.authMiddleware)
 		{
 			articles.POST("/new", h.saveArticle)
-			articles.GET("/")
+			articles.GET("/", h.getUserArticles)
 			articles.GET("/:id", h.getArticleByID)
 			articles.DELETE("/:id")
 		}

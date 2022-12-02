@@ -91,7 +91,7 @@ func (h *Handler) signIn(ctx *gin.Context) {
 		return
 	}
 
-	ctx.SetCookie("session_cookie", sessionToken, 3600, "/", "localhost", false, true)
+	ctx.SetCookie("session_cookie", sessionToken, 3600*24, "/", "localhost", false, true)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"user":    user,

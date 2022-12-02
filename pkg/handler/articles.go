@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -9,12 +8,13 @@ import (
 
 	"github.com/dazai404/blog-go-gin/models"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func (h *Handler) saveArticle(ctx *gin.Context) {
 	user, ok := ctx.Keys["user"].(*models.User)
 	if !ok {
-		log.Println("error user")
+		logrus.Println("error user")
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -159,7 +159,7 @@ func (h *Handler) getAllArticlesTest(ctx *gin.Context) {
 		}
 		articles = append(articles, &models.Article{
 			ID:        val.ID,
-			UserID:    val.ID,
+			UserID:    val.UserID,
 			Title:     val.Title,
 			Text:      articlesText[i].Text,
 			CreatedAt: val.CreatedAt,

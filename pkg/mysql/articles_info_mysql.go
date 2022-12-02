@@ -81,9 +81,46 @@ func (m *ArticlesInfoMySQL) GetArticlesInfo() ([]*models.ArticleInfo, error) {
 			return nil, err
 		}
 		articlesInfo = append(articlesInfo, &models.ArticleInfo{
-			ID: id,
-			UserID: userID,
-			Title: title,
+			ID:        id,
+			UserID:    userID,
+			Title:     title,
+			CreatedAt: createdAt,
+		})
+	}
+
+	return articlesInfo, nil
+}
+
+func (m *ArticlesInfoMySQL) GetUserArticlesInfo(userID int64) ([]*models.ArticleInfo, error) {
+	query := fmt.Sprintf("SELECT %s.id, %s.title, %s.created_at FROM %s WHERE user_id = ?", articlesInfoTable, articlesInfoTable, articlesInfoTable, articlesInfoTable)
+
+	rows, err := m.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				fmt.Println(err.Error())
+			}
+		}
+	}()
+
+	articlesInfo := make([]*models.ArticleInfo, 0, 1)
+	var id int64
+	var title string
+	var createdAt time.Time
+
+	for rows.Next() {
+		err = rows.Scan(&id, &title, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+		articlesInfo = append(articlesInfo, &models.ArticleInfo{
+			ID:        id,
+			UserID:    userID,
+			Title:     title,
 			CreatedAt: createdAt,
 		})
 	}

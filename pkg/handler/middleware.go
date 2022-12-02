@@ -18,20 +18,21 @@ func (h *Handler) authMiddleware(ctx *gin.Context) {
 		return
 	}
 
-	if session.IsExpired() {
+	err = session.IsExpired()
+	if err != nil {
 		ctx.SetCookie("session_cookie", "", 0, "/", "localhost", false, true)
+		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 		err = h.repository.DeleteSession(session.ID)
 		if err != nil {
 			newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 			return
 		}
-		newErrorResponse(ctx, http.StatusUnauthorized, "session is expired")
 		return
 	}
 
 	user, err := h.repository.GetUserByID(session.UserID)
 	if err != nil {
-		newErrorResponse(ctx, http.StatusUnauthorized, "session is expired")
+		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -51,14 +52,15 @@ func (h *Handler) adminMiddleware(ctx *gin.Context) {
 		return
 	}
 
-	if session.IsExpired() {
+	err = session.IsExpired()
+	if err != nil {
 		ctx.SetCookie("session_cookie", "", 0, "/", "localhost", false, true)
+		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 		err = h.repository.DeleteSession(session.ID)
 		if err != nil {
 			newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 			return
 		}
-		newErrorResponse(ctx, http.StatusUnauthorized, "session is expired")
 		return
 	}
 

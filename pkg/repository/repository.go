@@ -28,6 +28,7 @@ type ArticleInfoRepository interface {
 	DeleteArticleInfo(id int64) error
 	GetArticleInfo(id int64) (*models.ArticleInfo, error)
 	GetArticlesInfo() ([]*models.ArticleInfo, error)
+	GetUserArticlesInfo(userID int64) ([]*models.ArticleInfo, error)
 }
 
 type ArticleTextRepository interface {
