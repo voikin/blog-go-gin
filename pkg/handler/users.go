@@ -49,3 +49,63 @@ func (h *Handler) getUserArticles(ctx *gin.Context) {
 		"articles": articles,
 	})
 }
+
+func (h *Handler) getUser(ctx *gin.Context) {
+	user, ok := ctx.Keys["user"].(*models.User)
+	if !ok {
+		newErrorResponse(ctx, http.StatusInternalServerError, "user not found")
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
+}
+
+func (h *Handler) deleteUser(ctx *gin.Context) {
+	user, ok := ctx.Keys["user"].(*models.User)
+	if !ok {
+		newErrorResponse(ctx, http.StatusInternalServerError, "user not found")
+		return
+	}
+	err := h.repository.DeleteUser(user.ID)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+	ctx.AbortWithStatus(http.StatusOK)
+}
+
+func (h *Handler) updateUser(ctx *gin.Context) {
+	user, ok := ctx.Keys["user"].(*models.User)
+	if !ok {
+		newErrorResponse(ctx, http.StatusInternalServerError, "user not found")
+		return
+	}
+	input := &struct {
+		Nickname *string `json:"nickname"`
+		Email    *string `json:"email"`
+	}{}
+
+	err := ctx.BindJSON(input)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if input.Nickname != nil {
+		user.Nickname = *input.Nickname
+	}
+	if input.Nickname != nil {
+		user.Nickname = *input.Nickname
+	}
+
+	err = h.repository.UpdateUser(user)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
+
+}

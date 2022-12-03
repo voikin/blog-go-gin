@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/dazai404/blog-go-gin/models"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -78,7 +79,12 @@ func (m *UsersMySQL) GetUsers() ([]*models.User, error) {
 
 	rows, err := m.db.Query(query)
 
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			logrus.Println(err)
+		}
+	}()
 
 	if err != nil {
 		return nil, err
@@ -106,4 +112,15 @@ func (m *UsersMySQL) GetUsers() ([]*models.User, error) {
 	}
 
 	return users, nil
+}
+
+func (m *UsersMySQL) UpdateUser(user *models.User) error {
+	query := fmt.Sprintf("UPDATE %s SET %s.nickname = ?, %s.email = ? WHERE %s.id = ?", usersTable, usersTable, usersTable, usersTable)
+
+	_, err := m.db.Exec(query, user.Nickname, user.Email, user.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -24,34 +24,34 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/sign-in", h.signIn)
 	}
 
-	admin := router.Group("/admin", h.adminMiddleware)
+	api := router.Group("/api", h.authMiddleware)
 	{
-		users := admin.Group("/users")
+		private := api.Group("/private", h.adminMiddleware)
 		{
-			users.GET("/", h.getUsers)
-			users.GET("/:id", h.getUserByID)
-			users.DELETE("/:id", h.deleteUserByID)
+			users := private.Group("/users")
+			{
+				users.GET("/", h.getUsers)
+				users.GET("/:id", h.getUserByID)
+				users.DELETE("/:id", h.deleteUserByID)
+			}
+			privateArticles := private.Group("/articles")
+			{
+				privateArticles.GET("/", h.getAllArticlesTest)
+			}
 		}
-		adminArticles := admin.Group("/articles")
+		public := api.Group("/public")
 		{
-			adminArticles.GET("/", h.getAllArticlesTest)
-		}
-	}
-
-	show := router.Group("/show", h.authMiddleware)
-	{
-		show.GET("/")
-		show.GET("/:id")
-	}
-
-	api := router.Group("/api")
-	{
-		articles := api.Group("/articles", h.authMiddleware)
-		{
-			articles.POST("/new", h.saveArticle)
-			articles.GET("/", h.getUserArticles)
-			articles.GET("/:id", h.getArticleByID)
-			articles.DELETE("/:id")
+			user := public.Group("/user")
+			{
+				user.GET("/", h.getUser)
+				user.DELETE("/", h.deleteUser)
+				user.PUT("/", h.updateUser)
+			}
+			articles := public.Group("/articles")
+			{
+				articles.GET("/user", h.getUserArticles)
+				articles.POST("/new", h.saveArticle)
+			}
 		}
 	}
 

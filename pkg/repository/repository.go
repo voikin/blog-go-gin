@@ -21,6 +21,7 @@ type UserRepository interface {
 	GetUserByID(id int64) (*models.User, error)
 	GetUserByNickname(nickname string) (*models.User, error)
 	GetUsers() ([]*models.User, error)
+	UpdateUser(user *models.User) error
 }
 
 type ArticleInfoRepository interface {
